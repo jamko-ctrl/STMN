@@ -12,7 +12,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { colors, typography, spacing, borderRadius, layout } from '@/theme';
-import { Exercise, WorkoutSet, WorkoutSession } from '@/types';
+import { Exercise, WorkoutSet, WorkoutSession, RepType } from '@/types';
 import { workoutDb } from '@/services/database/workoutDb';
 import { SetCard } from '@/components/SetCard';
 import { RestTimer } from '@/components/RestTimer';
@@ -31,6 +31,7 @@ export const WorkoutLogger: React.FC = () => {
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [rpe, setRpe] = useState('');
+  const [repType, setRepType] = useState<RepType>('normal');
 
   useEffect(() => {
     initSession();
@@ -115,6 +116,7 @@ export const WorkoutLogger: React.FC = () => {
       setNumber,
       weight: weightNum,
       reps: repsNum,
+      repType,
       rpe: rpeNum,
       isPR,
       completedAt: Date.now(),
@@ -124,8 +126,9 @@ export const WorkoutLogger: React.FC = () => {
     setShowSetInput(false);
     setShowTimer(true);
 
-    // Clear RPE for next set
+    // Clear RPE for next set, keep rep type as 'normal' for next set
     setRpe('');
+    setRepType('normal');
   };
 
   const handleTimerComplete = () => {
@@ -311,6 +314,63 @@ export const WorkoutLogger: React.FC = () => {
               </View>
             </View>
 
+            {/* Rep Type Selector */}
+            <View>
+              <Text style={styles.inputLabel}>SET TYPE</Text>
+              <View style={styles.repTypeContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.repTypeChip,
+                    repType === 'normal' && styles.repTypeChipActive,
+                  ]}
+                  onPress={() => setRepType('normal')}
+                >
+                  <Text
+                    style={[
+                      styles.repTypeChipText,
+                      repType === 'normal' && styles.repTypeChipTextActive,
+                    ]}
+                  >
+                    NORMAL
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.repTypeChip,
+                    repType === 'failure' && styles.repTypeChipActive,
+                  ]}
+                  onPress={() => setRepType('failure')}
+                >
+                  <Text
+                    style={[
+                      styles.repTypeChipText,
+                      repType === 'failure' && styles.repTypeChipTextActive,
+                    ]}
+                  >
+                    FAILURE
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.repTypeChip,
+                    repType === 'drop-set' && styles.repTypeChipActive,
+                  ]}
+                  onPress={() => setRepType('drop-set')}
+                >
+                  <Text
+                    style={[
+                      styles.repTypeChipText,
+                      repType === 'drop-set' && styles.repTypeChipTextActive,
+                    ]}
+                  >
+                    DROP SET
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.modalButton}
@@ -481,5 +541,31 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: colors.bgPrimary,
+  },
+  repTypeContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  repTypeChip: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.bgTertiary,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  repTypeChipActive: {
+    backgroundColor: colors.accentYellow,
+    borderColor: colors.accentYellow,
+  },
+  repTypeChipText: {
+    ...typography.label,
+    fontSize: 11,
+    color: colors.textPrimary,
+  },
+  repTypeChipTextActive: {
+    color: colors.bgPrimary,
+    fontWeight: '700',
   },
 });

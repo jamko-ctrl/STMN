@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { WorkoutInsights, WorkoutSession, WorkoutSet, Exercise } from '@/types';
+import { WorkoutInsights, WorkoutSession, WorkoutSet, Exercise, PlateauDetection } from '@/types';
 import { workoutDb } from './database/workoutDb';
 
 // Store API key in .env file: ANTHROPIC_API_KEY=your_key_here
@@ -191,6 +191,120 @@ Return ONLY valid JSON in this exact format:
         reason: 'Consolidate current performance',
       };
     }
+  }
+
+  /**
+   * Detect plateaus for a specific exercise
+   * Returns null if no plateau detected
+   */
+  async detectPlateauForExercise(
+    exerciseId: string,
+    antiPlateauEnabled: boolean = true
+  ): Promise<PlateauDetection | null> {
+    if (!antiPlateauEnabled) return null;
+
+    // Get last 5 sessions for this exercise
+    const recentSessions = await this.getExerciseHistory(exerciseId, 5);
+
+    if (recentSessions.length < 3) return null; // Need at least 3 sessions
+
+    // Check if weight/reps have been stagnant
+    const latestSession = recentSessions[0];
+    const stuckCount = recentSessions.filter(session => {
+      const latestBest = this.getBestSet(latestSession.sets);
+      const sessionBest = this.getBestSet(session.sets);
+
+      // Same weight and similar reps (+/- 1)
+      return latestBest.weight === sessionBest.weight &&
+             Math.abs(latestBest.reps - sessionBest.reps) <= 1;
+    }).length;
+
+    if (stuckCount >= 3) {
+      const exercise = await workoutDb.getAllExercises().then(exercises =>
+        exercises.find(e => e.id === exerciseId)
+      );
+
+      const bestSet = this.getBestSet(latestSession.sets);
+
+      // Generate AI-powered plateau-breaking suggestions
+      const suggestions = await this.generatePlateauBreakingSuggestions(
+        exercise?.name || 'Exercise',
+        bestSet.weight,
+        bestSet.reps,
+        stuckCount
+      );
+
+      return {
+        exerciseId,
+        exerciseName: exercise?.name || 'Exercise',
+        sessionsStuck: stuckCount,
+        currentWeight: bestSet.weight,
+        currentReps: bestSet.reps,
+        suggestions,
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Generate AI-powered strategies to break through plateaus
+   */
+  private async generatePlateauBreakingSuggestions(
+    exerciseName: string,
+    weight: number,
+    reps: number,
+    sessionsStuck: number
+  ): Promise<string[]> {
+    try {
+      const prompt = `An athlete is plateaued on ${exerciseName} at ${weight}kg x ${reps} reps for ${sessionsStuck} sessions.
+
+Provide 3-4 specific, actionable plateau-breaking strategies. Be concise and direct.
+
+Examples:
+- "Try tempo reps: 3-second eccentric on each rep"
+- "Reduce weight to 80% and do volume sets (4x12)"
+- "Add pause reps: 2-second pause at bottom"
+- "Switch to close-grip variation for 2 weeks"
+- "Do drop sets: max reps, then -20% weight to failure"
+
+Return as JSON array: ["strategy1", "strategy2", "strategy3"]`;
+
+      const message = await this.client.messages.create({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 512,
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      const content = message.content[0];
+      if (content.type === 'text') {
+        return JSON.parse(content.text) as string[];
+      }
+    } catch (error) {
+      console.error('Plateau suggestions error:', error);
+    }
+
+    // Fallback suggestions
+    return [
+      `Try tempo reps: 3-second eccentric on each rep`,
+      `Reduce weight to ${Math.round(weight * 0.8)}kg and do volume sets (4x12)`,
+      `Add pause reps: 2-second pause at bottom`,
+      `Do drop sets: max reps at ${weight}kg, then ${weight - 10}kg to failure`,
+    ];
+  }
+
+  private getBestSet(sets: any[]): { weight: number; reps: number } {
+    return sets.reduce((best, set) => {
+      const current1RM = set.weight * (1 + set.reps / 30);
+      const best1RM = best.weight * (1 + best.reps / 30);
+      return current1RM > best1RM ? set : best;
+    }, sets[0]);
+  }
+
+  private async getExerciseHistory(exerciseId: string, limit: number = 5) {
+    // This would query recent sessions for the exercise
+    // Simplified for now
+    return [];
   }
 
   /**

@@ -42,6 +42,7 @@ class WorkoutDatabase {
         set_number INTEGER NOT NULL,
         weight REAL NOT NULL,
         reps INTEGER NOT NULL,
+        rep_type TEXT DEFAULT 'normal',
         rpe INTEGER,
         rest_time INTEGER,
         is_pr INTEGER DEFAULT 0,
@@ -253,8 +254,8 @@ class WorkoutDatabase {
 
     await this.db.runAsync(
       `INSERT INTO workout_sets
-       (id, session_id, exercise_id, set_number, weight, reps, rpe, rest_time, is_pr, completed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (id, session_id, exercise_id, set_number, weight, reps, rep_type, rpe, rest_time, is_pr, completed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         set.sessionId,
@@ -262,6 +263,7 @@ class WorkoutDatabase {
         set.setNumber,
         set.weight,
         set.reps,
+        set.repType || 'normal',
         set.rpe || null,
         set.restTime || null,
         set.isPR ? 1 : 0,
@@ -285,6 +287,7 @@ class WorkoutDatabase {
       setNumber: row.set_number,
       weight: row.weight,
       reps: row.reps,
+      repType: row.rep_type || 'normal',
       rpe: row.rpe,
       restTime: row.rest_time,
       isPR: row.is_pr === 1,
@@ -320,6 +323,7 @@ class WorkoutDatabase {
       setNumber: row.set_number,
       weight: row.weight,
       reps: row.reps,
+      repType: row.rep_type || 'normal',
       rpe: row.rpe,
       restTime: row.rest_time,
       isPR: row.is_pr === 1,

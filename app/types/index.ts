@@ -30,6 +30,8 @@ export type Equipment =
   | 'kettlebell'
   | 'resistance-band';
 
+export type RepType = 'normal' | 'failure' | 'drop-set';
+
 export interface WorkoutSession {
   id: string;
   startTime: number;
@@ -45,6 +47,7 @@ export interface WorkoutSet {
   setNumber: number;
   weight: number;
   reps: number;
+  repType: RepType; // normal, failure, or drop-set
   rpe?: number; // Rate of Perceived Exertion (1-10)
   restTime?: number; // seconds
   isPR: boolean;
@@ -65,6 +68,7 @@ export interface UserProfile {
   goals: ('strength' | 'hypertrophy' | 'endurance' | 'weight-loss')[];
   injuries: string[];
   weightUnit: 'kg' | 'lbs';
+  antiPlateauEnabled: boolean; // Toggle for AI plateau-breaking suggestions
 }
 
 // AI Analysis types
@@ -75,6 +79,16 @@ export interface WorkoutInsights {
   recoveryScore: number; // 0-100
   shouldDeload: boolean;
   contextualTips: string[];
+  plateauDetected?: PlateauDetection;
+}
+
+export interface PlateauDetection {
+  exerciseId: string;
+  exerciseName: string;
+  sessionsStuck: number; // How many sessions at same weight
+  currentWeight: number;
+  currentReps: number;
+  suggestions: string[]; // AI-generated plateau-breaking strategies
 }
 
 export interface Suggestion {

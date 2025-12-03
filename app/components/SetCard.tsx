@@ -47,6 +47,12 @@ export const SetCard: React.FC<SetCardProps> = ({
                 {set.reps}
                 <Text style={styles.unitText}> reps</Text>
               </Text>
+              {set.repType === 'failure' && (
+                <Text style={styles.repTypeBadge}>FAILURE</Text>
+              )}
+              {set.repType === 'drop-set' && (
+                <Text style={styles.repTypeBadge}>DROP SET</Text>
+              )}
               {set.isPR && <Text style={styles.prBadge}>PR</Text>}
             </View>
             {set.rpe && (
@@ -143,6 +149,15 @@ const styles = StyleSheet.create({
   prBadge: {
     ...typography.label,
     color: colors.accentGreen,
+    backgroundColor: colors.bgPrimary,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  repTypeBadge: {
+    ...typography.label,
+    fontSize: 10,
+    color: colors.accentYellow,
     backgroundColor: colors.bgPrimary,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
