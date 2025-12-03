@@ -16,6 +16,7 @@ import { Exercise, WorkoutSet, WorkoutSession } from '@/types';
 import { workoutDb } from '@/services/database/workoutDb';
 import { SetCard } from '@/components/SetCard';
 import { RestTimer } from '@/components/RestTimer';
+import { ExerciseSelector } from './ExerciseSelector';
 
 export const WorkoutLogger: React.FC = () => {
   const [session, setSession] = useState<WorkoutSession | null>(null);
@@ -24,6 +25,7 @@ export const WorkoutLogger: React.FC = () => {
   const [previousSets, setPreviousSets] = useState<WorkoutSet[]>([]);
   const [showTimer, setShowTimer] = useState(false);
   const [showSetInput, setShowSetInput] = useState(false);
+  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
 
   // Input state
   const [weight, setWeight] = useState('');
@@ -62,6 +64,13 @@ export const WorkoutLogger: React.FC = () => {
       setWeight(lastSet.weight.toString());
       setReps(lastSet.reps.toString());
     }
+
+    // Close the exercise selector
+    setShowExerciseSelector(false);
+  };
+
+  const handleChangeExercise = () => {
+    setShowExerciseSelector(true);
   };
 
   const handleAddSet = () => {
@@ -177,12 +186,24 @@ export const WorkoutLogger: React.FC = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>
-            {selectedExercise?.name || 'Select Exercise'}
-          </Text>
-          {selectedExercise && (
-            <Text style={styles.category}>{selectedExercise.category}</Text>
-          )}
+          <View style={styles.headerTop}>
+            <View style={styles.headerText}>
+              <Text style={styles.title}>
+                {selectedExercise?.name || 'Select Exercise'}
+              </Text>
+              {selectedExercise && (
+                <Text style={styles.category}>{selectedExercise.category}</Text>
+              )}
+            </View>
+            {selectedExercise && (
+              <TouchableOpacity
+                style={styles.changeButton}
+                onPress={handleChangeExercise}
+              >
+                <Text style={styles.changeButtonText}>CHANGE</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Sets List */}
@@ -199,19 +220,11 @@ export const WorkoutLogger: React.FC = () => {
           </TouchableOpacity>
         )}
 
-        {/* Exercise Selection (placeholder) */}
+        {/* Exercise Selection */}
         {!selectedExercise && (
           <TouchableOpacity
             style={styles.selectExerciseButton}
-            onPress={() => {
-              // This would open exercise selector
-              // For now, let's load a sample exercise
-              workoutDb.getAllExercises().then(exercises => {
-                if (exercises.length > 0) {
-                  loadExercise(exercises[0]);
-                }
-              });
-            }}
+            onPress={() => setShowExerciseSelector(true)}
           >
             <Text style={styles.selectExerciseText}>SELECT EXERCISE</Text>
           </TouchableOpacity>
@@ -228,6 +241,18 @@ export const WorkoutLogger: React.FC = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* Exercise Selector Modal */}
+      <Modal
+        visible={showExerciseSelector}
+        animationType="slide"
+        onRequestClose={() => setShowExerciseSelector(false)}
+      >
+        <ExerciseSelector
+          onSelect={loadExercise}
+          onClose={() => setShowExerciseSelector(false)}
+        />
+      </Modal>
 
       {/* Set Input Modal */}
       <Modal
@@ -324,6 +349,15 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.lg,
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  headerText: {
+    flex: 1,
+  },
   title: {
     ...typography.h1,
     color: colors.textPrimary,
@@ -332,6 +366,18 @@ const styles = StyleSheet.create({
   category: {
     ...typography.label,
     color: colors.textSecondary,
+  },
+  changeButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.bgSecondary,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  changeButtonText: {
+    ...typography.label,
+    color: colors.textPrimary,
   },
   loadingText: {
     ...typography.body,
