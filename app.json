@@ -21,7 +21,7 @@
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
       },
-      "newArchEnabled": true
+      "newArchEnabled": false
     },
     "android": {
       "adaptiveIcon": {
@@ -30,7 +30,7 @@
       },
       "package": "com.stmn.workouttracker",
       "permissions": [],
-      "newArchEnabled": true
+      "newArchEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
