@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "scheme": "stmn-workout",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -19,7 +20,8 @@
       "bundleIdentifier": "com.stmn.workouttracker",
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
-      }
+      },
+      "newArchEnabled": true
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +29,8 @@
         "backgroundColor": "#000000"
       },
       "package": "com.stmn.workouttracker",
-      "permissions": []
+      "permissions": [],
+      "newArchEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,9 +39,17 @@
       [
         "expo-sqlite",
         {
-          "enableFTS": true
+          "enableFTS": true,
+          "useSQLCipher": false
         }
-      ]
-    ]
+      ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
